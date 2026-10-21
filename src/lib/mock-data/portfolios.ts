@@ -1,0 +1,81 @@
+import type { PortfolioSummary, Transaction } from "@/types/banking";
+
+const investmentTransactions: Transaction[] = [
+  {
+    id: "inv-txn-001",
+    accountId: "portfolio",
+    date: "2026-10-11T16:48:00.000Z",
+    description: "Buy Maple Growth ETF (MGRW)",
+    category: "Investments",
+    direction: "debit",
+    amount: 250.0,
+    status: "posted",
+  },
+  {
+    id: "inv-txn-002",
+    accountId: "portfolio",
+    date: "2026-09-20T15:00:00.000Z",
+    description: "Dividend — Northern Dividend Fund",
+    category: "Investments",
+    direction: "credit",
+    amount: 42.15,
+    status: "posted",
+  },
+  {
+    id: "inv-txn-003",
+    accountId: "portfolio",
+    date: "2026-08-15T14:30:00.000Z",
+    description: "Buy Canadian Bond Index (CBDX)",
+    category: "Investments",
+    direction: "debit",
+    amount: 500.0,
+    status: "posted",
+  },
+];
+
+export const mockPortfolio: PortfolioSummary = {
+  totalValue: 18420.75,
+  dayChangePercent: 0.42,
+  holdings: [
+    {
+      id: "hold-001",
+      symbol: "MGRW",
+      name: "Maple Growth ETF",
+      quantity: 120.5,
+      marketPrice: 68.4,
+      marketValue: 8242.2,
+      allocationPercent: 44.7,
+      dayChangePercent: 0.65,
+    },
+    {
+      id: "hold-002",
+      symbol: "NDVF",
+      name: "Northern Dividend Fund",
+      quantity: 85.0,
+      marketPrice: 72.15,
+      marketValue: 6132.75,
+      allocationPercent: 33.3,
+      dayChangePercent: 0.18,
+    },
+    {
+      id: "hold-003",
+      symbol: "CBDX",
+      name: "Canadian Bond Index",
+      quantity: 210.0,
+      marketPrice: 19.26,
+      marketValue: 4045.8,
+      allocationPercent: 22.0,
+      dayChangePercent: -0.05,
+    },
+  ],
+  history: [
+    { date: "2026-04-01", value: 16200 },
+    { date: "2026-05-01", value: 16540 },
+    { date: "2026-06-01", value: 16890 },
+    { date: "2026-07-01", value: 17110 },
+    { date: "2026-08-01", value: 17480 },
+    { date: "2026-09-01", value: 17920 },
+    { date: "2026-10-01", value: 18420.75 },
+  ],
+  investmentTransactions,
+};
