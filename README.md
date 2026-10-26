@@ -140,6 +140,8 @@ npm run typecheck
 3. Apply every schema file to the database that Vercel uses.
 4. Deploy, then test sign-in and one lab challenge on the live URL.
 
+Live deployment: https://fake-bank-mfzi1w8c5-ruthogadina22-4409s-projects.vercel.app/
+
 Enable `LAB_MODE=on` only on deployments meant for students. Redeploy after changing environment variables, because existing deployments keep their old values.
 
 ## Security and authorized use

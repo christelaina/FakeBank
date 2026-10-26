@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { authRequiredResponse, isAuthRequiredError } from "@/lib/server/auth/session";
 import { getDashboardSummary } from "@/lib/server/dashboard";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const summary = await getDashboardSummary();
