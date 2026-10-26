@@ -3,7 +3,10 @@
 import { Alert } from "@/components/feedback/Alert";
 import { Button } from "@/components/ui/button";
 import { uploadProfilePicture } from "@/lib/api/documents";
+import { getProfile, profilePictureSrc } from "@/lib/api/profile";
+import { getEnvironment } from "@/lib/config/environment";
 import { formatFileSize } from "@/lib/formatting/currency";
+import { fileToBase64 } from "@/lib/utils/base64";
 import {
   createSafeImagePreviewUrl,
   validateProfilePictureFile,
@@ -18,6 +21,14 @@ export function ProfilePictureUpload() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [verifiedByBackend, setVerifiedByBackend] = useState<boolean | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [currentVersion, setCurrentVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!getEnvironment().isLiveMode) return;
+    getProfile()
+      .then((profile) => setCurrentVersion(profile.profilePictureUpdatedAt ?? null))
+      .catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -52,13 +63,20 @@ export function ProfilePictureUpload() {
     setUploading(true);
     setStatusMessage(null);
     try {
+      const contentBase64 = await fileToBase64(file);
       const result = await uploadProfilePicture({
         fileName: file.name,
         mimeType: file.type,
         sizeBytes: file.size,
+        contentBase64,
       });
       setStatusMessage(result.message);
       setVerifiedByBackend(result.verifiedByBackend);
+      if (getEnvironment().isLiveMode && result.verifiedByBackend) {
+        const updatedAt = new Date().toISOString();
+        setCurrentVersion(updatedAt);
+        window.dispatchEvent(new CustomEvent("profile-picture-updated", { detail: updatedAt }));
+      }
     } catch (err) {
       setStatusMessage(
         err instanceof ApiError ? err.message : "Upload failed.",
@@ -88,6 +106,20 @@ export function ProfilePictureUpload() {
         </p>
       </div>
 
+      {currentVersion && !file ? (
+        <div className="flex items-center gap-3 rounded-lg border border-surface-border bg-surface p-4">
+          <div className="relative h-16 w-16 overflow-hidden rounded-full border border-surface-border bg-white">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={profilePictureSrc(currentVersion)}
+              alt="Current profile picture"
+              className="h-full w-full object-cover"
+            />
+          </div>
+          <p className="text-sm text-brand-800/70">Current profile picture</p>
+        </div>
+      ) : null}
+
       {errors.length > 0 ? (
         <Alert tone="error" title="Unsupported file">
           <ul className="list-disc pl-4">
@@ -114,9 +146,11 @@ export function ProfilePictureUpload() {
             <p className="mt-1 text-brand-800/70">
               {formatFileSize(file.size)} · {file.type || "unknown type"}
             </p>
-            <p className="mt-1 text-brand-800/70">Preview status: local only</p>
+            <p className="mt-1 text-brand-800/70">
+              {getEnvironment().isLiveMode ? "Ready to upload" : "Preview status: local only"}
+            </p>
             <Button className="mt-3" onClick={onUpload} disabled={uploading}>
-              {uploading ? "Uploading…" : "Submit upload metadata"}
+              {uploading ? "Uploading…" : "Upload picture"}
             </Button>
           </div>
         </div>

@@ -7,13 +7,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ProfilePictureUpload } from "@/features/documents/components/ProfilePictureUpload";
+import { DocumentUpload } from "@/features/documents/components/DocumentUpload";
+import { LabChooseFileLink } from "@/features/lab/components/LabChooseFileLink";
 import { listDocuments } from "@/lib/api/documents";
 import {
   formatCanadianDate,
   formatFileSize,
 } from "@/lib/formatting/currency";
+import { getEnvironment } from "@/lib/config/environment";
+import { isLabEnabled } from "@/lib/lab/config";
+import * as neonDocuments from "@/lib/server/documents";
 import { ApiError } from "@/types/api";
+import { redirect } from "next/navigation";
+import { isAuthRequiredError } from "@/lib/server/auth/session";
 
 export const metadata = {
   title: "Documents",
@@ -21,13 +27,15 @@ export const metadata = {
 
 export default async function DocumentsPage() {
   try {
-    const documents = await listDocuments();
+    const documents = getEnvironment().isLiveMode
+      ? await neonDocuments.listDocuments()
+      : await listDocuments();
 
     return (
       <div>
         <PageHeader
           title="Documents"
-          description="Statement library and profile picture selection. Uploaded content is never executed by this frontend."
+          description="Statement library and document uploads. Uploaded content is stored as data and never executed by this frontend."
         />
 
         <div className="grid gap-6 xl:grid-cols-3">
@@ -69,19 +77,24 @@ export default async function DocumentsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Profile picture upload</CardTitle>
+              <CardTitle>Upload document</CardTitle>
               <CardDescription>
-                Local preview only. Future server validation lives in the isolated API.
+                PDF, JPEG, or PNG. The file is checked against its content before it is saved.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ProfilePictureUpload />
+              {isLabEnabled() ? (
+                <LabChooseFileLink purpose="document" />
+              ) : (
+                <DocumentUpload enabled={getEnvironment().isLiveMode} />
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
     );
   } catch (error) {
+    if (isAuthRequiredError(error)) redirect("/sign-in");
     return (
       <div>
         <PageHeader title="Documents" />

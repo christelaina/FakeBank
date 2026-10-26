@@ -8,12 +8,23 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ProfileForm } from "@/features/profile/components/ProfileForm";
+import { ProfilePictureUpload } from "@/features/documents/components/ProfilePictureUpload";
+import { LabChooseFileLink } from "@/features/lab/components/LabChooseFileLink";
+import { SignOutButton } from "@/components/layout/SignOutButton";
 import {
   getProfile,
   getProfileChangeHistory,
 } from "@/lib/api/profile";
 import { formatCanadianDateTime } from "@/lib/formatting/currency";
+import { getEnvironment } from "@/lib/config/environment";
+import * as neonProfile from "@/lib/server/profile";
 import { ApiError } from "@/types/api";
+import { redirect } from "next/navigation";
+import { isAuthRequiredError } from "@/lib/server/auth/session";
+import { LabFlagBanner } from "@/features/lab/components/LabFlagBanner";
+import { isLabEnabled } from "@/lib/lab/config";
+import { generateFlag } from "@/lib/lab/flags";
+import { hasLabDetection } from "@/lib/server/lab/detections";
 
 export const metadata = {
   title: "Profile and Settings",
@@ -21,17 +32,22 @@ export const metadata = {
 
 export default async function ProfilePage() {
   try {
-    const [profile, history] = await Promise.all([
-      getProfile(),
-      getProfileChangeHistory(),
-    ]);
+    // Live mode reads Neon directly on the server; mock mode uses the repository layer.
+    const [profile, history] = getEnvironment().isLiveMode
+      ? await Promise.all([neonProfile.getProfile(), neonProfile.getChangeHistory()])
+      : await Promise.all([getProfile(), getProfileChangeHistory()]);
+
+    const showXssFlag =
+      isLabEnabled() && getEnvironment().isLiveMode && (await hasLabDetection(profile.id, "xss"));
 
     return (
       <div>
         <PageHeader
           title="Profile and Settings"
-          description="Fictional customer profile and preference controls. Authentication remains outside this frontend."
+          description="Fictional customer profile and preference controls."
         />
+
+        {showXssFlag ? <LabFlagBanner challengeId="xss" flag={generateFlag(profile.id, "xss")} /> : null}
 
         <div className="grid gap-6 xl:grid-cols-3">
           <Card className="xl:col-span-2">
@@ -49,6 +65,20 @@ export default async function ProfilePage() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
+                <CardTitle>Profile picture</CardTitle>
+                <CardDescription>Shown as a small avatar in the header.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLabEnabled() ? (
+                  <LabChooseFileLink purpose="profile_picture" />
+                ) : (
+                  <ProfilePictureUpload />
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
                 <CardTitle>Contact details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
@@ -62,8 +92,18 @@ export default async function ProfilePage() {
                 <p>
                   <span className="text-brand-800/60">Two-factor authentication</span>
                   <br />
-                  {profile.twoFactorEnabled ? "Enabled (mock)" : "Disabled (mock)"}
+                  {profile.twoFactorEnabled ? "Enabled" : "Disabled"}
                 </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Session</CardTitle>
+                <CardDescription>End your signed-in session on this browser.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SignOutButton />
               </CardContent>
             </Card>
 
@@ -90,6 +130,7 @@ export default async function ProfilePage() {
       </div>
     );
   } catch (error) {
+    if (isAuthRequiredError(error)) redirect("/sign-in");
     return (
       <div>
         <PageHeader title="Profile and Settings" />

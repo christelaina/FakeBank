@@ -6,6 +6,8 @@ export interface RequestOptions {
   body?: unknown;
   headers?: Record<string, string>;
   signal?: AbortSignal;
+  /** Use a relative URL on the same origin instead of NEXT_PUBLIC_API_BASE_URL. */
+  sameOrigin?: boolean;
 }
 
 function createRequestId(): string {
@@ -24,7 +26,7 @@ export async function apiRequest<T>(
   options: RequestOptions = {},
 ): Promise<T> {
   const env = getEnvironment();
-  const baseUrl = assertLiveApiConfigured(env);
+  const baseUrl = options.sameOrigin ? "" : assertLiveApiConfigured(env);
   const requestId = createRequestId();
   const method = options.method ?? "GET";
   const url = `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
@@ -63,17 +65,25 @@ export async function apiRequest<T>(
       typeof (payload as { message: unknown }).message === "string"
         ? (payload as { message: string }).message
         : `Request failed with status ${response.status}.`;
+    const code =
+      typeof payload === "object" &&
+      payload &&
+      "code" in payload &&
+      typeof (payload as { code: unknown }).code === "string"
+        ? (payload as { code: string }).code
+        : undefined;
+
+    // Session expired or was removed server-side: send the user to sign in.
+    if (response.status === 401 && code === "AUTH_REQUIRED" && typeof window !== "undefined") {
+      if (window.location.pathname !== "/sign-in") {
+        window.location.assign("/sign-in");
+      }
+    }
 
     throw new ApiError(message, {
       status: response.status,
       requestId: responseRequestId,
-      code:
-        typeof payload === "object" &&
-        payload &&
-        "code" in payload &&
-        typeof (payload as { code: unknown }).code === "string"
-          ? (payload as { code: string }).code
-          : undefined,
+      code,
     });
   }
 

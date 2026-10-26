@@ -1,18 +1,23 @@
 "use client";
 
+import { apiRequest } from "@/lib/api/client";
 import { cn } from "@/lib/utils/cn";
 import {
   ArrowLeftRight,
+  Flag,
   FileText,
   LayoutDashboard,
   LineChart,
   ListOrdered,
   Shield,
+  Trophy,
   UserRound,
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import type { LabMe } from "@/types/lab";
 
 export const navigationItems = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
@@ -25,12 +30,33 @@ export const navigationItems = [
   { href: "/security", label: "Security Center", icon: Shield },
 ] as const;
 
+// Lab links are added only when LAB_MODE is on and the role matches. Default state is hidden.
+export const labStudentNavItem = { href: "/lab/progress", label: "Progress", icon: Flag } as const;
+export const labAdminNavItem = { href: "/admin/leaderboard", label: "Leaderboard", icon: Trophy } as const;
+
+type NavItem = { href: string; label: string; icon: typeof Flag };
+
 export function Navigation({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const [labItems, setLabItems] = useState<NavItem[]>([]);
+
+  useEffect(() => {
+    apiRequest<LabMe>("/api/lab/me", { sameOrigin: true })
+      .then((me) => {
+        if (!me.enabled) return;
+        if (me.role === "student") setLabItems([labStudentNavItem]);
+        if (me.role === "admin") setLabItems([labAdminNavItem]);
+      })
+      .catch(() => {
+        // Lab status is optional; the banking navigation renders without it.
+      });
+  }, []);
+
+  const items: NavItem[] = [...navigationItems, ...labItems];
 
   return (
     <nav aria-label="Primary" className="space-y-1">
-      {navigationItems.map((item) => {
+      {items.map((item) => {
         const active =
           item.href === "/"
             ? pathname === "/"

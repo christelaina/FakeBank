@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { TradeForm } from "@/features/investments/components/TradeForm";
 import { TransactionTable } from "@/features/transactions/components/TransactionTable";
 import { getPortfolio } from "@/lib/api/investments";
 import {
@@ -16,7 +17,15 @@ import {
   formatCanadianDate,
   formatPercent,
 } from "@/lib/formatting/currency";
+import { getEnvironment } from "@/lib/config/environment";
+import { listAccounts } from "@/lib/server/accounts";
+import * as neonInvestments from "@/lib/server/investments";
+import { getQuotes } from "@/lib/server/market";
 import { ApiError } from "@/types/api";
+import { redirect } from "next/navigation";
+import { isAuthRequiredError } from "@/lib/server/auth/session";
+import type { Account } from "@/types/banking";
+import type { MarketQuote } from "@/types/market";
 
 export const metadata = {
   title: "Investments",
@@ -24,18 +33,29 @@ export const metadata = {
 
 export default async function InvestmentsPage() {
   try {
-    const portfolio = await getPortfolio();
+    const live = getEnvironment().isLiveMode;
+    const portfolio = live
+      ? await neonInvestments.getPortfolio()
+      : await getPortfolio();
+    const quotes: MarketQuote[] = live ? await getQuotes() : [];
+    const accounts: Account[] = live ? await listAccounts() : [];
 
     return (
       <div>
         <PageHeader
           title="Investments"
-          description="Synthetic holdings and performance data. No live brokerage connections are used."
+          description="Simulated holdings. Market prices move every 5 minutes and no live brokerage connections are used."
         />
 
+        <div className="mb-3 flex items-center gap-2">
+          <Badge tone="warning">Sample data</Badge>
+          <span className="text-xs text-brand-800/70">
+            Holdings, prices, and history are fictional training figures.
+          </span>
+        </div>
         <div className="grid gap-4 md:grid-cols-2">
           <StatCard
-            label="Portfolio market value"
+            label="Portfolio market value (sample)"
             value={formatCad(portfolio.totalValue)}
           />
           <StatCard
@@ -93,7 +113,7 @@ export default async function InvestmentsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Historical performance</CardTitle>
-              <CardDescription>Month-end portfolio snapshots</CardDescription>
+              <CardDescription>Month-end portfolio snapshots (sample)</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {portfolio.history.map((point) => (
@@ -111,6 +131,16 @@ export default async function InvestmentsPage() {
 
         <Card className="mt-6">
           <CardHeader>
+            <CardTitle>Buy or sell</CardTitle>
+            <CardDescription>Trades fill at the current simulated price</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TradeForm quotes={quotes} accounts={accounts} enabled={live} />
+          </CardContent>
+        </Card>
+
+        <Card className="mt-6">
+          <CardHeader>
             <CardTitle>Investment transactions</CardTitle>
           </CardHeader>
           <CardContent>
@@ -120,6 +150,7 @@ export default async function InvestmentsPage() {
       </div>
     );
   } catch (error) {
+    if (isAuthRequiredError(error)) redirect("/sign-in");
     return (
       <div>
         <PageHeader title="Investments" />

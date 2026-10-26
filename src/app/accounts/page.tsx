@@ -4,6 +4,8 @@ import { AccountCard } from "@/features/accounts/components/AccountCard";
 import { listAccounts } from "@/lib/api/accounts";
 import { ApiError } from "@/types/api";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Accounts",
 };

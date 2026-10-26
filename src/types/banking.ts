@@ -33,6 +33,7 @@ export interface CreateTransferInput {
   destinationAccountId: string;
   amount: number;
   description?: string;
+  idempotencyKey: string;
 }
 
 export interface TransferResult {
@@ -80,6 +81,8 @@ export interface UserProfile {
   preferredLanguage: "en-CA" | "fr-CA";
   marketingEmails: boolean;
   twoFactorEnabled: boolean;
+  // ISO time of the last picture upload, or null when no picture is set.
+  profilePictureUpdatedAt?: string | null;
 }
 
 export interface ProfileUpdateInput {
@@ -105,6 +108,14 @@ export interface DocumentMeta {
   mimeType: string;
 }
 
+export interface DocumentUploadInput {
+  name: string;
+  category: string;
+  mimeType: string;
+  sizeBytes: number;
+  contentBase64: string;
+}
+
 export interface ProfilePictureUploadInput {
   fileName: string;
   mimeType: string;
@@ -120,21 +131,9 @@ export interface ProfilePictureUploadResult {
   verifiedByBackend: boolean;
 }
 
-export interface SecuritySession {
-  id: string;
-  device: string;
-  location: string;
-  ipAddress: string;
-  lastActiveAt: string;
-  current: boolean;
-}
-
 export interface SignInEvent {
   id: string;
   occurredAt: string;
-  device: string;
-  location: string;
-  success: boolean;
 }
 
 export interface SecurityNotification {
@@ -147,7 +146,6 @@ export interface SecurityNotification {
 }
 
 export interface SecurityActivity {
-  sessions: SecuritySession[];
   signIns: SignInEvent[];
   notifications: SecurityNotification[];
 }
@@ -156,7 +154,8 @@ export interface DashboardSummary {
   totalAssets: number;
   totalLiabilities: number;
   availableBalance: number;
-  portfolioValue: number;
+  /** Null when investments are not stored in the database. */
+  portfolioValue: number | null;
   accounts: Account[];
   recentTransactions: Transaction[];
   recentActivity: string[];

@@ -3,20 +3,65 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getProfile, profilePictureSrc } from "@/lib/api/profile";
+import { apiRequest } from "@/lib/api/client";
 import { getEnvironment } from "@/lib/config/environment";
-import { Bell, Menu, Search, UserRound } from "lucide-react";
+import { HintDialog } from "@/features/lab/components/HintDialog";
+import { Bell, Lightbulb, Menu, Search, UserRound } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { LabMe } from "@/types/lab";
 
 export function Header({
   onMenuClick,
   userName = "Jordan Ellis",
+  rawName = false,
 }: {
   onMenuClick?: () => void;
   userName?: string;
+  // Lab-only: renders the display name as HTML for the XSS challenge.
+  rawName?: boolean;
 }) {
   const env = useMemo(() => getEnvironment(), []);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [liveName, setLiveName] = useState<string | null>(null);
+  const [pictureVersion, setPictureVersion] = useState<string | null>(null);
+  const [labEnabled, setLabEnabled] = useState(false);
+  const [hintsOpen, setHintsOpen] = useState(false);
+
+  useEffect(() => {
+    apiRequest<LabMe>("/api/lab/me", { sameOrigin: true })
+      .then((me) => setLabEnabled(me.enabled))
+      .catch(() => setLabEnabled(false));
+  }, []);
+
+  async function signOut() {
+    try {
+      await apiRequest("/api/auth/sign-out", { method: "POST", sameOrigin: true });
+    } finally {
+      window.location.assign("/sign-in");
+    }
+  }
+
+  useEffect(() => {
+    if (!env.isLiveMode) return;
+    const onProfileUpdated = (event: Event) =>
+      setLiveName((event as CustomEvent<string>).detail);
+    const onPictureUpdated = (event: Event) =>
+      setPictureVersion((event as CustomEvent<string>).detail);
+    window.addEventListener("profile-updated", onProfileUpdated);
+    window.addEventListener("profile-picture-updated", onPictureUpdated);
+    getProfile()
+      .then((profile) => {
+        setLiveName(profile.displayName);
+        setPictureVersion(profile.profilePictureUpdatedAt ?? null);
+      })
+      .catch(() => undefined);
+    return () => {
+      window.removeEventListener("profile-updated", onProfileUpdated);
+      window.removeEventListener("profile-picture-updated", onPictureUpdated);
+    };
+  }, [env]);
 
   return (
     <header className="sticky top-0 z-30 border-b border-surface-border bg-white/90 backdrop-blur">
@@ -82,8 +127,23 @@ export function Header({
               aria-haspopup="menu"
               onClick={() => setProfileOpen((open) => !open)}
             >
-              <UserRound className="h-4 w-4" />
-              <span className="hidden sm:inline">{userName}</span>
+              {pictureVersion && env.isLiveMode ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={profilePictureSrc(pictureVersion)}
+                  alt=""
+                  className="h-6 w-6 rounded-full object-cover"
+                />
+              ) : (
+                <UserRound className="h-4 w-4" />
+              )}
+              <span className="hidden sm:inline">
+                {rawName ? (
+                  <span dangerouslySetInnerHTML={{ __html: liveName ?? userName }} />
+                ) : (
+                  liveName ?? userName
+                )}
+              </span>
             </Button>
             {profileOpen ? (
               <div
@@ -91,7 +151,7 @@ export function Header({
                 className="absolute right-0 mt-2 w-56 rounded-lg border border-surface-border bg-white p-2 shadow-panel"
               >
                 <p className="px-2 py-1.5 text-xs text-brand-800/70">
-                  Signed in (mock session)
+                  {env.isLiveMode ? "Signed in" : "Signed in (mock session)"}
                 </p>
                 <Link
                   href="/profile"
@@ -112,8 +172,21 @@ export function Header({
               </div>
             ) : null}
           </div>
+
+          {labEnabled ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label="Hints"
+              title="Hints"
+              onClick={() => setHintsOpen(true)}
+            >
+              <Lightbulb className="h-5 w-5" />
+            </Button>
+          ) : null}
         </div>
       </div>
+      {hintsOpen ? <HintDialog onClose={() => setHintsOpen(false)} /> : null}
     </header>
   );
 }

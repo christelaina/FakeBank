@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/layout/AppShell";
+import { isLabEnabled } from "@/lib/lab/config";
 import type { Metadata } from "next";
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
@@ -30,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en-CA">
       <body className={`${sourceSans.variable} ${sourceSerif.variable} font-sans antialiased`}>
-        <AppShell>{children}</AppShell>
+        <AppShell rawName={isLabEnabled()}>{children}</AppShell>
       </body>
     </html>
   );

@@ -12,8 +12,12 @@ import { TransactionTable } from "@/features/transactions/components/Transaction
 import { getAccount } from "@/lib/api/accounts";
 import { listTransactions } from "@/lib/api/transactions";
 import { formatCad } from "@/lib/formatting/currency";
+import { LabFlagBanner } from "@/features/lab/components/LabFlagBanner";
+import { isLabEnabled } from "@/lib/lab/config";
+import { getLabAccountView } from "@/lib/server/lab/account-lookup";
 import { ApiError } from "@/types/api";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 export async function generateMetadata({
   params,
@@ -23,19 +27,32 @@ export async function generateMetadata({
   return { title: `Account ${params.accountId}` };
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function AccountDetailPage({
   params,
 }: {
   params: { accountId: string };
 }) {
+  // Outside try/catch: notFound() throws, and the catch would swallow it.
+  // Lab deployments only: the lab lookup skips the ownership check.
+  const labView = isLabEnabled() ? await getLabAccountView(params.accountId) : null;
+  const account = isLabEnabled() ? labView?.account : await getAccount(params.accountId);
+  if (!account) {
+    notFound();
+  }
+
   try {
-    const [account, transactions] = await Promise.all([
-      getAccount(params.accountId),
-      listTransactions({ accountId: params.accountId, pageSize: 8 }),
-    ]);
+    const transactionItems = labView
+      ? labView.transactions
+      : (await listTransactions({ accountId: account.id, pageSize: 8 })).items;
 
     return (
       <div>
+        {labView?.flags.map((item) => (
+          <LabFlagBanner key={item.challengeId} challengeId={item.challengeId} flag={item.flag} />
+        ))}
+
         <PageHeader
           title={account.nickname || account.name}
           description={`${account.name} · ${account.maskedNumber}`}
@@ -95,7 +112,7 @@ export default async function AccountDetailPage({
           </CardHeader>
           <CardContent>
             <TransactionTable
-              transactions={transactions.items}
+              transactions={transactionItems}
               accountNames={{ [account.id]: account.name }}
             />
           </CardContent>

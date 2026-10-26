@@ -14,11 +14,23 @@ import {
 } from "@/lib/validation/transfer";
 import type { Account, TransferResult } from "@/types/banking";
 import { ApiError } from "@/types/api";
+import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 
 type Step = "edit" | "review" | "result";
 
-export function TransferForm({ accounts }: { accounts: Account[] }) {
+const RACE_MAX_REQUESTS = 10;
+
+export function TransferForm({
+  accounts: allAccounts,
+  raceMode = false,
+}: {
+  accounts: Account[];
+  /** Lab only: confirm sends parallel transfers to the race endpoint. */
+  raceMode?: boolean;
+}) {
+  // Credit accounts cannot be a source, so they are only offered as destinations (card payments).
+  const accounts = useMemo(() => allAccounts.filter((a) => a.type !== "credit"), [allAccounts]);
   const [step, setStep] = useState<Step>("edit");
   const [values, setValues] = useState<TransferFormValues>({
     sourceAccountId: accounts[0]?.id ?? "",
@@ -30,14 +42,19 @@ export function TransferForm({ accounts }: { accounts: Account[] }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<TransferResult | null>(null);
+  const [raceSummary, setRaceSummary] = useState<string | null>(null);
+  const [raceCount, setRaceCount] = useState(3);
+  const effectiveRaceCount = Math.min(RACE_MAX_REQUESTS, Math.max(2, Math.floor(raceCount) || 2));
+  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
+  const router = useRouter();
 
   const source = useMemo(
     () => accounts.find((a) => a.id === values.sourceAccountId),
     [accounts, values.sourceAccountId],
   );
   const destination = useMemo(
-    () => accounts.find((a) => a.id === values.destinationAccountId),
-    [accounts, values.destinationAccountId],
+    () => allAccounts.find((a) => a.id === values.destinationAccountId),
+    [allAccounts, values.destinationAccountId],
   );
 
   function validate(): boolean {
@@ -59,21 +76,47 @@ export function TransferForm({ accounts }: { accounts: Account[] }) {
   function onContinue(event: FormEvent) {
     event.preventDefault();
     setError(null);
-    if (validate()) setStep("review");
+    if (validate()) {
+      // New key per review; retries from the review step reuse it.
+      setIdempotencyKey(crypto.randomUUID());
+      setStep("review");
+    }
   }
 
   async function onConfirm() {
     setSubmitting(true);
     setError(null);
     try {
+      if (raceMode) {
+        const outcomes = await Promise.allSettled(
+          Array.from({ length: effectiveRaceCount }, () =>
+            fetch("/api/lab/challenges/race/transfer", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({
+                sourceAccountId: values.sourceAccountId,
+                destinationAccountId: values.destinationAccountId,
+                amount: Number(values.amount),
+              }),
+            }).then((response) => response.ok),
+          ),
+        );
+        const completed = outcomes.filter((o) => o.status === "fulfilled" && o.value).length;
+        setRaceSummary(`${completed} of ${effectiveRaceCount} transfers completed at the same time.`);
+        setStep("result");
+        router.refresh();
+        return;
+      }
       const transferResult = await createTransfer({
         sourceAccountId: values.sourceAccountId,
         destinationAccountId: values.destinationAccountId,
         amount: Number(values.amount),
         description: values.description || undefined,
+        idempotencyKey,
       });
       setResult(transferResult);
       setStep("result");
+      router.refresh();
     } catch (err) {
       const message =
         err instanceof ApiError
@@ -83,6 +126,25 @@ export function TransferForm({ accounts }: { accounts: Account[] }) {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (step === "result" && raceSummary) {
+    return (
+      <div className="space-y-4">
+        <Alert tone="info" title="Transfers sent">
+          {raceSummary}
+        </Alert>
+        <Button
+          onClick={() => {
+            setStep("edit");
+            setRaceSummary(null);
+            setValues((current) => ({ ...current, amount: 0, description: "" }));
+          }}
+        >
+          Start another transfer
+        </Button>
+      </div>
+    );
   }
 
   if (step === "result" && result) {
@@ -146,6 +208,13 @@ export function TransferForm({ accounts }: { accounts: Account[] }) {
             <dd className="mt-1 font-medium">{values.description || "—"}</dd>
           </div>
         </dl>
+        {raceMode ? (
+          <Alert tone="warning" title="Race condition test">
+            This sends {effectiveRaceCount} transfers of {formatCad(Number(values.amount))} at the same time, totaling{" "}
+            {formatCad(Number(values.amount) * effectiveRaceCount)} from an account with{" "}
+            {formatCad(source?.availableBalance ?? 0)} available.
+          </Alert>
+        ) : null}
         {error ? <Alert tone="error">{error}</Alert> : null}
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" onClick={() => setStep("edit")} disabled={submitting}>
@@ -193,7 +262,7 @@ export function TransferForm({ accounts }: { accounts: Account[] }) {
             }))
           }
         >
-          {accounts.map((account) => (
+          {allAccounts.map((account) => (
             <option key={account.id} value={account.id}>
               {account.name}
             </option>
@@ -241,6 +310,21 @@ export function TransferForm({ accounts }: { accounts: Account[] }) {
       </div>
 
       {error ? <Alert tone="error">{error}</Alert> : null}
+
+      {raceMode ? (
+        <div>
+          <Label htmlFor="raceCount">Number of simultaneous transfers</Label>
+          <Input
+            id="raceCount"
+            type="number"
+            min={2}
+            max={RACE_MAX_REQUESTS}
+            step={1}
+            value={raceCount}
+            onChange={(e) => setRaceCount(Number(e.target.value))}
+          />
+        </div>
+      ) : null}
 
       <Button type="submit">Review transfer</Button>
     </form>

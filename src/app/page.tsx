@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/data-display/PageHeader";
 import { StatCard } from "@/components/data-display/StatCard";
 import { Alert } from "@/components/feedback/Alert";
+import { EmptyState } from "@/components/feedback/EmptyState";
 import {
   Card,
   CardContent,
@@ -9,20 +10,23 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { AccountCard } from "@/features/accounts/components/AccountCard";
+import { MagicLoanButton } from "@/features/overview/components/MagicLoanButton";
 import { TransactionTable } from "@/features/transactions/components/TransactionTable";
-import { getRepositories } from "@/lib/api";
+import { getDashboardData } from "@/lib/api/dashboard";
 import { formatCad, formatPercent } from "@/lib/formatting/currency";
 import { ApiError } from "@/types/api";
 import { ArrowLeftRight, Landmark, PiggyBank, WalletCards } from "lucide-react";
 import Link from "next/link";
 
+function money(value: number | null): string {
+  return value === null ? "Not connected" : formatCad(value);
+}
+
+export const dynamic = "force-dynamic";
+
 export default async function OverviewPage() {
   try {
-    const repos = getRepositories();
-    const [summary, portfolio] = await Promise.all([
-      repos.dashboard.getSummary(),
-      repos.investments.getPortfolio(),
-    ]);
+    const { summary, portfolio } = await getDashboardData();
 
     const accountNames = Object.fromEntries(
       summary.accounts.map((account) => [account.id, account.name]),
@@ -42,6 +46,7 @@ export default async function OverviewPage() {
                 <ArrowLeftRight className="h-4 w-4" />
                 Transfer
               </Link>
+              <MagicLoanButton />
               <Link
                 href="/accounts"
                 className="inline-flex h-10 items-center justify-center rounded-md border border-surface-border bg-white px-4 text-sm font-medium text-brand-800 hover:bg-surface-muted"
@@ -56,7 +61,11 @@ export default async function OverviewPage() {
           <StatCard
             label="Total assets"
             value={formatCad(summary.totalAssets)}
-            hint="Deposit accounts + portfolio market value"
+            hint={
+              summary.portfolioValue === null
+                ? "Deposit accounts only; investments not connected"
+                : "Deposit accounts + portfolio market value"
+            }
             icon={<Landmark className="h-5 w-5" />}
           />
           <StatCard
@@ -73,8 +82,12 @@ export default async function OverviewPage() {
           />
           <StatCard
             label="Portfolio value"
-            value={formatCad(summary.portfolioValue)}
-            hint={`${formatPercent(portfolio.dayChangePercent)} today`}
+            value={money(summary.portfolioValue)}
+            hint={
+              portfolio
+                ? `${formatPercent(portfolio.dayChangePercent)} today`
+                : "Not connected yet"
+            }
             icon={<ArrowLeftRight className="h-5 w-5" />}
           />
         </div>
@@ -117,7 +130,13 @@ export default async function OverviewPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {portfolio.holdings.map((holding) => (
+                {portfolio ? null : (
+                  <EmptyState
+                    title="Investments not connected"
+                    description="Holdings will appear here once portfolio data is stored."
+                  />
+                )}
+                {portfolio?.holdings.map((holding) => (
                   <div key={holding.id}>
                     <div className="mb-1 flex justify-between text-sm">
                       <span className="font-medium">{holding.symbol}</span>

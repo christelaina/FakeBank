@@ -184,7 +184,7 @@ export function createMockRepositories(): FakeBankRepositories {
           accounts,
           recentTransactions,
           recentActivity: [
-            "Signed in from Chrome on Windows",
+            "Signed in to FakeBank",
             "Transfer of $500.00 to High-Interest Savings posted",
             "October statement available in Documents",
             "Investment contribution to Maple Growth ETF",

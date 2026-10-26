@@ -27,6 +27,7 @@ describe("transfer form validation", () => {
       sourceAccountId: "1001",
       destinationAccountId: "1002",
       amount: 10,
+      idempotencyKey: "mock-transfer-key-1",
     });
     expect(result.verifiedByBackend).toBe(false);
     expect(result.message.toLowerCase()).toContain("mock");

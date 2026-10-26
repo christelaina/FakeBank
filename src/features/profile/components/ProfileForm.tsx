@@ -30,7 +30,8 @@ export function ProfileForm({ initialProfile }: { initialProfile: UserProfile })
         marketingEmails: profile.marketingEmails,
       });
       setProfile(updated);
-      setMessage("Preferences saved for this session (mock or live API response).");
+      window.dispatchEvent(new CustomEvent("profile-updated", { detail: updated.displayName }));
+      setMessage("Profile saved.");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Unable to save profile.");
     } finally {

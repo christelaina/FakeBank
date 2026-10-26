@@ -11,6 +11,8 @@ import { listAccounts } from "@/lib/api/accounts";
 import { listTransactions } from "@/lib/api/transactions";
 import { ApiError } from "@/types/api";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Transactions",
 };

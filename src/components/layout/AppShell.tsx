@@ -2,21 +2,31 @@
 
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { usePathname } from "next/navigation";
 import { ReactNode, useState } from "react";
 
 export function AppShell({
   children,
   userName,
+  rawName,
 }: {
   children: ReactNode;
   userName?: string;
+  rawName?: boolean;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
+
+  // The sign-in pages have no navigation chrome.
+  if (pathname === "/sign-in" || pathname === "/admin/sign-in") {
+    return <div className="min-h-screen">{children}</div>;
+  }
 
   return (
     <div className="min-h-screen">
       <Header
         userName={userName}
+        rawName={rawName}
         onMenuClick={() => setSidebarOpen(true)}
       />
       <div className="mx-auto flex max-w-7xl">

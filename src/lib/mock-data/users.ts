@@ -68,56 +68,11 @@ export const mockDocuments: DocumentMeta[] = [
 ];
 
 export const mockSecurityActivity: SecurityActivity = {
-  sessions: [
-    {
-      id: "sess-001",
-      device: "Chrome on Windows",
-      location: "Toronto, ON",
-      ipAddress: "203.0.113.24",
-      lastActiveAt: "2026-10-18T22:10:00.000Z",
-      current: true,
-    },
-    {
-      id: "sess-002",
-      device: "Safari on iPhone",
-      location: "Mississauga, ON",
-      ipAddress: "198.51.100.77",
-      lastActiveAt: "2026-10-17T08:42:00.000Z",
-      current: false,
-    },
-  ],
   signIns: [
-    {
-      id: "signin-001",
-      occurredAt: "2026-10-18T21:55:00.000Z",
-      device: "Chrome on Windows",
-      location: "Toronto, ON",
-      success: true,
-    },
-    {
-      id: "signin-002",
-      occurredAt: "2026-10-16T07:12:00.000Z",
-      device: "Safari on iPhone",
-      location: "Mississauga, ON",
-      success: true,
-    },
-    {
-      id: "signin-003",
-      occurredAt: "2026-10-14T23:40:00.000Z",
-      device: "Unknown Android",
-      location: "Montreal, QC",
-      success: false,
-    },
+    { id: "signin-001", occurredAt: "2026-10-18T21:55:00.000Z" },
+    { id: "signin-002", occurredAt: "2026-10-16T07:12:00.000Z" },
   ],
   notifications: [
-    {
-      id: "sec-note-001",
-      createdAt: "2026-10-14T23:41:00.000Z",
-      title: "Unsuccessful sign-in attempt",
-      body: "We blocked a sign-in attempt from an unrecognized device in Montreal.",
-      severity: "warning",
-      read: false,
-    },
     {
       id: "sec-note-002",
       createdAt: "2026-10-01T09:00:00.000Z",

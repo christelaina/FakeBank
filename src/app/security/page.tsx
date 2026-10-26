@@ -54,7 +54,7 @@ export default function SecurityPage() {
     <div>
       <PageHeader
         title="Security Center"
-        description="Mock sessions, sign-in activity, and security notifications for UI prototyping."
+        description="Sign-in activity and security notifications for your account."
       />
 
       {error ? (
@@ -69,31 +69,6 @@ export default function SecurityPage() {
         <div className="grid gap-6 xl:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Active sessions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {activity.sessions.map((session) => (
-                <div
-                  key={session.id}
-                  className="rounded-lg border border-surface-border px-3 py-3 text-sm"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-medium">{session.device}</p>
-                    {session.current ? <Badge tone="success">Current</Badge> : null}
-                  </div>
-                  <p className="mt-1 text-brand-800/70">
-                    {session.location} · {session.ipAddress}
-                  </p>
-                  <p className="mt-1 text-xs text-brand-800/60">
-                    Last active {formatCanadianDateTime(session.lastActiveAt)}
-                  </p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
               <CardTitle>Recent sign-in activity</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -102,16 +77,7 @@ export default function SecurityPage() {
                   key={event.id}
                   className="rounded-lg border border-surface-border px-3 py-3 text-sm"
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-medium">{event.device}</p>
-                    <Badge tone={event.success ? "success" : "danger"}>
-                      {event.success ? "Success" : "Blocked"}
-                    </Badge>
-                  </div>
-                  <p className="mt-1 text-brand-800/70">{event.location}</p>
-                  <p className="mt-1 text-xs text-brand-800/60">
-                    {formatCanadianDateTime(event.occurredAt)}
-                  </p>
+                  <p className="font-medium">{formatCanadianDateTime(event.occurredAt)}</p>
                 </div>
               ))}
             </CardContent>

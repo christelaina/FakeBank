@@ -14,6 +14,8 @@
     "test:all": "npm run typecheck && npm run lint && npm run test && npm run test:e2e"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.2.0",
+    "@vercel/blob": "^2.8.2",
     "clsx": "^2.1.1",
     "lucide-react": "^0.468.0",
     "next": "^14.2.18",
