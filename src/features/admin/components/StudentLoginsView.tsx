@@ -12,17 +12,17 @@ export function StudentLoginsView() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    apiRequest<StudentLogin[]>("/api/admin/student-logins", { sameOrigin: true })
+    apiRequest<StudentLogin[]>("/api/admin/logins", { sameOrigin: true })
       .then(setLogins)
       .catch((caught: unknown) => {
-        setError(caught instanceof ApiError ? caught.message : "Student logins could not be loaded.");
+        setError(caught instanceof ApiError ? caught.message : "Logins could not be loaded.");
       });
   }, []);
 
   return (
     <div>
       <PageHeader
-        title="Student logins"
+        title="Logins"
         description="Student emails and clear text passwords. Do not share this page with students."
       />
 

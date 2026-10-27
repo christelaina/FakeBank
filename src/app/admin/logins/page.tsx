@@ -1,4 +1,4 @@
-// src/app/admin/student-logins/page.tsx
+// src/app/admin/logins/page.tsx
 import { notFound } from "next/navigation";
 import { StudentLoginsView } from "@/features/admin/components/StudentLoginsView";
 import { isLabEnabled } from "@/lib/lab/config";

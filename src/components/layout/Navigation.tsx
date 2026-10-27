@@ -39,7 +39,7 @@ export const labAdminNavItems = [
   { href: "/admin/leaderboard", label: "Leaderboard", icon: Trophy },
   { href: "/admin/job-aid", label: "Job aid", icon: BookOpen },
   { href: "/admin/walkthroughs", label: "Walkthroughs", icon: ListChecks },
-  { href: "/admin/student-logins", label: "Student logins", icon: KeyRound },
+  { href: "/admin/logins", label: "Logins", icon: KeyRound },
 ] as const;
 
 type NavItem = { href: string; label: string; icon: typeof Flag };

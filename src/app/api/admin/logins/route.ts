@@ -1,4 +1,4 @@
-// src/app/api/admin/student-logins/route.ts
+// src/app/api/admin/logins/route.ts
 import { NextResponse } from "next/server";
 import { isLabEnabled, labNotFoundResponse } from "@/lib/lab/config";
 import { requireAdminUserId, isAdminRequiredError } from "@/lib/server/admin/guard";
@@ -20,7 +20,7 @@ export async function GET() {
     }
     console.error("Failed to load student logins:", error);
     return NextResponse.json(
-      { code: "STUDENT_LOGINS_FAILED", message: "Student logins could not be loaded." },
+      { code: "STUDENT_LOGINS_FAILED", message: "Logins could not be loaded." },
       { status: 500 },
     );
   }
