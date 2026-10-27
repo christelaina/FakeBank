@@ -17,7 +17,7 @@ export function nameMatchesType(fileName: string, mimeType: LabFileMimeType): bo
 }
 
 export function containsScript(content: string): boolean {
-  return /<script[\s>]/i.test(content);
+  return /<script[\s>]|\son[a-z]+\s*=|javascript:/i.test(content);
 }
 
 export const LAB_FILE_PURPOSES = ["document", "profile_picture"] as const;

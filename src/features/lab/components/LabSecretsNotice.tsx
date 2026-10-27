@@ -5,7 +5,7 @@ import { useEffect } from "react";
 // Inserted before the html element so it sits directly under the doctype in DevTools.
 export function LabSecretsNotice({ iv, secretKey }: { iv: string; secretKey: string }) {
   useEffect(() => {
-    const text = ` great this is a safe space to hide the raw texts of my iv and keys. they're also encrypted lol, they're not ready for all this. iv: ${iv} key: ${secretKey} `;
+    const text = ` great this is a safe space to hide the raw texts of my iv and keys. they're not ready for all this. iv: ${iv} key: ${secretKey} `;
     const alreadyAdded = Array.from(document.childNodes).some(
       (node) => node.nodeType === Node.COMMENT_NODE && node.nodeValue === text,
     );

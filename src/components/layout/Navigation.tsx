@@ -4,10 +4,13 @@ import { apiRequest } from "@/lib/api/client";
 import { cn } from "@/lib/utils/cn";
 import {
   ArrowLeftRight,
+  BookOpen,
   Flag,
   FileText,
+  KeyRound,
   LayoutDashboard,
   LineChart,
+  ListChecks,
   ListOrdered,
   Shield,
   Trophy,
@@ -32,7 +35,12 @@ export const navigationItems = [
 
 // Lab links are added only when LAB_MODE is on and the role matches. Default state is hidden.
 export const labStudentNavItem = { href: "/lab/progress", label: "Progress", icon: Flag } as const;
-export const labAdminNavItem = { href: "/admin/leaderboard", label: "Leaderboard", icon: Trophy } as const;
+export const labAdminNavItems = [
+  { href: "/admin/leaderboard", label: "Leaderboard", icon: Trophy },
+  { href: "/admin/job-aid", label: "Job aid", icon: BookOpen },
+  { href: "/admin/walkthroughs", label: "Walkthroughs", icon: ListChecks },
+  { href: "/admin/student-logins", label: "Student logins", icon: KeyRound },
+] as const;
 
 type NavItem = { href: string; label: string; icon: typeof Flag };
 
@@ -45,7 +53,7 @@ export function Navigation({ onNavigate }: { onNavigate?: () => void }) {
       .then((me) => {
         if (!me.enabled) return;
         if (me.role === "student") setLabItems([labStudentNavItem]);
-        if (me.role === "admin") setLabItems([labAdminNavItem]);
+        if (me.role === "admin") setLabItems([...labAdminNavItems]);
       })
       .catch(() => {
         // Lab status is optional; the banking navigation renders without it.

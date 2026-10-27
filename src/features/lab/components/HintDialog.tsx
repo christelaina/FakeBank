@@ -13,6 +13,7 @@ type Hint = {
   cost: number;
   purchased: boolean;
   steps: string[] | null;
+  pointer: string | null;
 };
 
 export function HintDialog({ onClose }: { onClose: () => void }) {
@@ -102,7 +103,10 @@ export function HintDialog({ onClose }: { onClose: () => void }) {
           <ul className="mt-4 divide-y divide-surface-border rounded-md border border-surface-border">
             {hints.map((hint) => (
               <li key={hint.id} className="flex items-center justify-between gap-3 px-4 py-3">
-                <span className="font-medium text-brand-950">{hint.title}</span>
+                <span className="min-w-0">
+                  <span className="block font-medium text-brand-950">{hint.title}</span>
+                  {hint.pointer ? <span className="block text-xs text-brand-800/70">Free pointer: {hint.pointer}</span> : null}
+                </span>
                 {hint.purchased ? (
                   <Button variant="secondary" size="sm" onClick={() => setSelected(hint)}>
                     View
