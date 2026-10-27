@@ -3,16 +3,16 @@
 import { Alert } from "@/components/feedback/Alert";
 import { PageHeader } from "@/components/data-display/PageHeader";
 import { apiRequest } from "@/lib/api/client";
-import type { StudentLogin } from "@/lib/server/admin/student-logins";
+import type { Login } from "@/lib/server/admin/logins";
 import { ApiError } from "@/types/api";
 import { useEffect, useState } from "react";
 
-export function StudentLoginsView() {
-  const [logins, setLogins] = useState<StudentLogin[] | null>(null);
+export function LoginsView() {
+  const [logins, setLogins] = useState<Login[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    apiRequest<StudentLogin[]>("/api/admin/logins", { sameOrigin: true })
+    apiRequest<Login[]>("/api/admin/logins", { sameOrigin: true })
       .then(setLogins)
       .catch((caught: unknown) => {
         setError(caught instanceof ApiError ? caught.message : "Logins could not be loaded.");
@@ -23,7 +23,7 @@ export function StudentLoginsView() {
     <div>
       <PageHeader
         title="Logins"
-        description="Student emails and clear text passwords. Do not share this page with students."
+        description="Emails and clear text passwords. Do not share this page."
       />
 
       {error ? (
@@ -35,7 +35,7 @@ export function StudentLoginsView() {
       {!error && logins === null ? <p className="text-sm text-brand-800/70">Loading...</p> : null}
 
       {logins && logins.length === 0 ? (
-        <p className="text-sm text-brand-800/70">No student accounts yet.</p>
+        <p className="text-sm text-brand-800/70">No accounts yet.</p>
       ) : null}
 
       {logins && logins.length > 0 ? (

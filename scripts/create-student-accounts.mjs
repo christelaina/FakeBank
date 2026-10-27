@@ -29,13 +29,37 @@ const PASSWORDS = [
   "ihavenoideawhatimdoing",
   "showmethemoney!",
 ];
-const STUDENT_00 = { n: 0, password: "ihavethepower!" };
+// Index 0 is student00; index 1-20 map to PASSWORDS[0-19].
+const HANDLES = [
+  "walterwhite",
+  "wendydarling",
+  "thedude",
+  "mrincredible",
+  "rtc",
+  "tonystark",
+  "hansolo",
+  "darthvader",
+  "gandalf",
+  "ferrisbueller",
+  "neo",
+  "dorothygale",
+  "venkman",
+  "jacksparrow",
+  "deadpool",
+  "optimusprime",
+  "shrek",
+  "spongebob",
+  "homersimpson",
+  "leeloodallas",
+  "fonzie",
+];
+const STUDENT_00 = { n: 0, handle: HANDLES[0], password: "ihavethepower!" };
 const BACKFILL = process.argv.includes("--backfill-victims");
 const TARGETS = BACKFILL
   ? []
   : process.argv.includes("--student00")
     ? [STUDENT_00]
-    : PASSWORDS.map((password, i) => ({ n: i + 1, password }));
+    : PASSWORDS.map((password, i) => ({ n: i + 1, handle: HANDLES[i + 1], password }));
 
 if (process.env.LAB_MODE !== "on") throw new Error("LAB_MODE must be on.");
 if (!process.env.LAB_DATABASE_URL) throw new Error("LAB_DATABASE_URL is not set.");
@@ -104,21 +128,22 @@ try {
       `SELECT u.id, a.id AS chequing_id
        FROM users u
        JOIN accounts a ON a.user_id = u.id AND a.name = 'Everyday Chequing'
-       WHERE u.email LIKE 'student%@fakebank.com'
+       WHERE u.email LIKE '%@fakebank.com'
+         AND u.id NOT IN ('11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', '33333333-3333-3333-3333-333333333333', '44444444-4444-4444-4444-444444444444')
          AND u.id NOT IN (SELECT student_id FROM lab_victims)`,
     );
     for (const row of rows) await createVictim(client, row.id, row.chequing_id);
     console.log(`Created lab victims for ${rows.length} students.`);
   }
-  for (const { n, password } of TARGETS) {
+  for (const { n, handle, password } of TARGETS) {
     const label = String(n).padStart(2, "0");
-    const email = `student${label}${DOMAIN}`;
+    const email = `${handle}${DOMAIN}`;
     const userRows = (
       await client.query(
         `INSERT INTO users (email, password_hash, display_name)
          VALUES ($1, $2, $3)
          RETURNING id`,
-        [email, encryptPassword(password), `Student ${label}`],
+        [email, encryptPassword(password), handle],
       )
     ).rows;
     const userId = userRows[0].id;
