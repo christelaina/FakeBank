@@ -2,6 +2,7 @@
 export type LabChallengeProgress = {
   id: string;
   title: string;
+  description: string;
   points: number;
   solved: boolean;
   solvedAt: string | null;

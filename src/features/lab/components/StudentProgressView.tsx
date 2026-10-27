@@ -38,24 +38,25 @@ export function StudentProgressView({ actions }: { actions?: ReactNode }) {
 
       {progress ? (
         <>
-          <div className="mb-6 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-lg border border-surface-border bg-white p-4 shadow-panel">
-              <div className="text-sm text-brand-800/70">Total points</div>
-              <div className="text-2xl font-semibold text-brand-950">{progress.totalPoints}</div>
-            </div>
-            <div className="rounded-lg border border-surface-border bg-white p-4 shadow-panel">
-              <div className="text-sm text-brand-800/70">Hint cost</div>
-              <div className="text-2xl font-semibold text-brand-950">{progress.hintCost}</div>
-            </div>
-            <div className="rounded-lg border border-surface-border bg-white p-4 shadow-panel">
-              <div className="text-sm text-brand-800/70">Challenges solved</div>
-              <div className="text-2xl font-semibold text-brand-950">
-                {progress.solvedCount} of {progress.challenges.length}
+          <div className="overflow-hidden rounded-lg border border-surface-border bg-white shadow-panel">
+            <div className="grid divide-y divide-surface-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+              <div className="p-4">
+                <div className="text-sm text-brand-800/70">Total points</div>
+                <div className="text-2xl font-semibold text-brand-950">{progress.totalPoints}</div>
+              </div>
+              <div className="p-4">
+                <div className="text-sm text-brand-800/70">Hint cost</div>
+                <div className="text-2xl font-semibold text-brand-950">{progress.hintCost}</div>
+              </div>
+              <div className="p-4">
+                <div className="text-sm text-brand-800/70">Challenges solved</div>
+                <div className="text-2xl font-semibold text-brand-950">
+                  {progress.solvedCount} of {progress.challenges.length}
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="overflow-x-auto rounded-lg border border-surface-border bg-white shadow-panel">
+            <div className="overflow-x-auto border-t border-surface-border">
             <table className="min-w-full text-left text-sm">
               <thead className="bg-surface-muted text-brand-800">
                 <tr>
@@ -67,7 +68,10 @@ export function StudentProgressView({ actions }: { actions?: ReactNode }) {
               <tbody>
                 {progress.challenges.map((challenge) => (
                   <tr key={challenge.id} className="border-t border-surface-border">
-                    <td className="px-4 py-3 font-medium text-brand-950">{challenge.title}</td>
+                    <td className="px-4 py-3">
+                      <span className="block font-medium text-brand-950">{challenge.title}</span>
+                      <span className="mt-1 block text-brand-800/70">{challenge.description}</span>
+                    </td>
                     <td className="px-4 py-3 text-right">{challenge.points}</td>
                     <td className="px-4 py-3">
                       {challenge.solved && challenge.solvedAt
@@ -78,6 +82,7 @@ export function StudentProgressView({ actions }: { actions?: ReactNode }) {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </>
       ) : null}

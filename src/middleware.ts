@@ -2,7 +2,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 const SESSION_COOKIE = "fakebank_session";
-const PUBLIC_PATHS = ["/sign-in", "/admin/sign-in"];
+const PUBLIC_PATHS = ["/sign-in", "/admin/sign-in", "/create-account"];
 
 // In live mode, every page requires a session cookie. API routes enforce auth themselves
 // and return 401, so they are not redirected here.

@@ -17,8 +17,8 @@ export function AppShell({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
 
-  // The sign-in pages have no navigation chrome.
-  if (pathname === "/sign-in" || pathname === "/admin/sign-in") {
+  // Signed-out pages have no navigation chrome; the header would call protected APIs.
+  if (pathname === "/sign-in" || pathname === "/admin/sign-in" || pathname === "/create-account") {
     return <div className="min-h-screen">{children}</div>;
   }
 

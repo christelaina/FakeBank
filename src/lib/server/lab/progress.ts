@@ -1,5 +1,6 @@
 // Server-only. Points are derived from lab_solves so they cannot drift from the recorded solves.
 import { sql } from "@/lib/db";
+import { CHALLENGE_DESCRIPTIONS } from "@/lib/server/lab/walkthroughs";
 import type { LabLeaderboardRow, LabProgress } from "@/types/lab";
 
 type ProgressRow = {
@@ -26,6 +27,7 @@ export async function getStudentProgress(studentId: string): Promise<LabProgress
   const challenges = rows.map((row) => ({
     id: row.id,
     title: row.title,
+    description: CHALLENGE_DESCRIPTIONS[row.id] ?? "",
     points: row.points,
     solved: row.solved_at !== null,
     solvedAt: row.solved_at === null ? null : new Date(row.solved_at).toISOString(),
