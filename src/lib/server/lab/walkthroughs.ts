@@ -61,12 +61,12 @@ export const FREE_POINTERS: Record<string, string> = {
 };
 
 export const CHALLENGE_DESCRIPTIONS: Record<string, string> = {
-  api: "Object-level authorization is missing on account endpoints, so a signed-in user can read accounts they do not own.",
-  xss: "Stored cross-site scripting. A display name is saved without sanitizing and rendered as HTML in other pages.",
-  race: "Race condition in transfers. The balance check and the debit are not atomic, so parallel requests can overdraw an account.",
-  crypto: "Weak cryptography. Secrets are protected with a key and IV that are exposed to the client.",
-  file: "Unrestricted file upload. Uploaded content is served as active content based on its contents, not its type.",
-  "access-control": "Broken access control. An admin endpoint is reachable by a student because the role check is missing.",
+  api: "The site lets you look at bank accounts, but it doesn't check whether they belong to you. Try to see an account that isn't yours.",
+  xss: "Some pages show a user's display name. Try putting code in your name so the site runs it for anyone who views it.",
+  race: "A transfer checks your balance and then takes the money in two separate steps. Try sending many transfers at the same moment to spend more than you have.",
+  crypto: "The site hides passwords by scrambling them, but the key used to scramble them is visible to you. Try to unscramble a password.",
+  file: "You can upload a profile picture. The site only checks the file name, not what the file really is. Try uploading something that isn't a picture.",
+  "access-control": "There's an admin page for staff only. Students aren't supposed to reach it, but the site doesn't stop them. Try opening it as a student.",
 };
 
 export type ChallengeGuide = {
